@@ -1,0 +1,460 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Hex byte reverser — Initio Learning Trust</title>
+<style>
+  :root {
+    --initio-blue: #283E49;
+    --initio-aqua: #89CCCA;
+    --initio-red:  #EF776E;
+    --initio-yellow: #FFCE32;
+    --pale-blue:   #84CFED;
+
+    --bg: #FAFAF7;
+    --surface: #FFFFFF;
+    --surface-2: #F4F7F7;
+    --text: #283E49;
+    --text-muted: #5F7580;
+    --text-faint: #8A9AA3;
+    --border: rgba(40, 62, 73, 0.12);
+    --border-strong: rgba(40, 62, 73, 0.22);
+    --focus-ring: rgba(137, 204, 202, 0.45);
+
+    --radius-md: 8px;
+    --radius-lg: 12px;
+    --font-mono: ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
+    --font-sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #1A2830;
+      --surface: #232F38;
+      --surface-2: #2A3843;
+      --text: #F5F4EF;
+      --text-muted: #A5B3BB;
+      --text-faint: #7A8994;
+      --border: rgba(245, 244, 239, 0.12);
+      --border-strong: rgba(245, 244, 239, 0.22);
+      --focus-ring: rgba(137, 204, 202, 0.55);
+    }
+  }
+
+  * { box-sizing: border-box; }
+
+  html, body {
+    margin: 0;
+    padding: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+  }
+
+  body {
+    padding: 1.5rem 1rem;
+  }
+
+  .wrap {
+    max-width: 640px;
+    margin: 0 auto;
+  }
+
+  header.brand {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding-bottom: 1rem;
+    border-bottom: 0.5px solid var(--border);
+    margin-bottom: 1.5rem;
+  }
+
+  header.brand img {
+    height: 32px;
+    width: auto;
+    display: block;
+  }
+
+  header.brand .kb-label {
+    font-size: 12px;
+    color: var(--text-faint);
+  }
+
+  h1 {
+    font-size: 22px;
+    font-weight: 500;
+    color: var(--initio-blue);
+    margin: 0 0 0.25rem;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    h1 { color: var(--text); }
+  }
+
+  .subtitle {
+    font-size: 14px;
+    color: var(--text-muted);
+    margin: 0 0 1rem;
+  }
+
+  .mode-switch {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 2px;
+    background: var(--surface-2);
+    border-radius: var(--radius-md);
+    padding: 3px;
+    margin-bottom: 1.25rem;
+  }
+
+  .mode-btn {
+    font: inherit;
+    font-size: 13px;
+    padding: 0.4rem 0.5rem;
+    background: transparent;
+    color: var(--text-muted);
+    border: 0;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: background-color 120ms ease, color 120ms ease, box-shadow 120ms ease;
+  }
+
+  .mode-btn[aria-selected="true"] {
+    background: var(--surface);
+    color: var(--text);
+    box-shadow: 0 0 0 0.5px var(--border);
+  }
+
+  .mode-btn:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 3px var(--focus-ring);
+  }
+
+  label.field-label {
+    display: block;
+    font-size: 13px;
+    color: var(--text-muted);
+    margin-bottom: 0.375rem;
+  }
+
+  input[type="text"] {
+    width: 100%;
+    height: 40px;
+    padding: 0 0.75rem;
+    font-family: var(--font-mono);
+    font-size: 15px;
+    color: var(--text);
+    background: var(--surface);
+    border: 0.5px solid var(--border-strong);
+    border-radius: var(--radius-md);
+    outline: none;
+    transition: border-color 120ms ease, box-shadow 120ms ease;
+  }
+
+  input[type="text"]:focus {
+    border-color: var(--initio-blue);
+    box-shadow: 0 0 0 3px var(--focus-ring);
+  }
+
+  @media (prefers-color-scheme: dark) {
+    input[type="text"]:focus { border-color: var(--initio-aqua); }
+  }
+
+  .error {
+    font-size: 12px;
+    color: var(--initio-red);
+    margin: 0.375rem 0 0;
+    min-height: 16px;
+  }
+
+  .cards {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    margin-top: 1rem;
+  }
+
+  @media (max-width: 480px) {
+    .cards { grid-template-columns: 1fr; }
+  }
+
+  .card {
+    position: relative;
+    background: var(--surface-2);
+    border-radius: var(--radius-md);
+    padding: 1rem;
+    border-left: 3px solid var(--initio-aqua);
+  }
+
+  .card-label {
+    font-size: 13px;
+    color: var(--text-muted);
+    margin: 0 0 0.375rem;
+  }
+
+  .card-value {
+    font-family: var(--font-mono);
+    font-size: 20px;
+    font-weight: 500;
+    color: var(--text);
+    word-break: break-all;
+    line-height: 1.3;
+    margin: 0;
+  }
+
+  .copy-btn {
+    position: absolute;
+    top: 0.625rem;
+    right: 0.625rem;
+    font: inherit;
+    font-size: 12px;
+    color: var(--text-muted);
+    background: transparent;
+    border: 0.5px solid var(--border-strong);
+    border-radius: 6px;
+    padding: 0.125rem 0.5rem;
+    cursor: pointer;
+    transition: background-color 120ms ease, color 120ms ease;
+  }
+
+  .copy-btn:hover {
+    background-color: rgba(137, 204, 202, 0.2);
+    color: var(--text);
+  }
+
+  .copy-btn:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 3px var(--focus-ring);
+  }
+
+  .byte-line {
+    margin: 1rem 0 0;
+    font-family: var(--font-mono);
+    font-size: 13px;
+    color: var(--text-faint);
+    word-break: break-all;
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="brand">
+    <img src="assets/logo.svg" alt="Initio Learning Trust">
+    <span class="kb-label">IT Knowledge base tool</span>
+  </header>
+
+  <main>
+    <h1>Hex byte reverser</h1>
+    <p class="subtitle">Convert between a decimal number and its reversed hex byte order.</p>
+
+    <div class="mode-switch" role="tablist" aria-label="Conversion direction">
+      <button type="button" class="mode-btn" role="tab" aria-selected="true"  data-mode="decToHex">Decimal → Reversed hex</button>
+      <button type="button" class="mode-btn" role="tab" aria-selected="false" data-mode="hexToDec">Reversed hex → Decimal</button>
+    </div>
+
+    <label class="field-label" id="input-label" for="main-input">Decimal number</label>
+    <input
+      id="main-input"
+      type="text"
+      inputmode="numeric"
+      autocomplete="off"
+      autocapitalize="none"
+      spellcheck="false"
+      value="2196032614"
+    >
+    <p id="error-msg" class="error" role="alert"></p>
+
+    <div class="cards">
+      <div class="card">
+        <p class="card-label" id="card-label-1">Hex</p>
+        <p class="card-value" id="value-1" aria-live="polite">—</p>
+        <button type="button" class="copy-btn" data-target="value-1" aria-label="Copy value">Copy</button>
+      </div>
+      <div class="card">
+        <p class="card-label" id="card-label-2">Reversed bytes</p>
+        <p class="card-value" id="value-2" aria-live="polite">—</p>
+        <button type="button" class="copy-btn" data-target="value-2" aria-label="Copy value">Copy</button>
+      </div>
+    </div>
+
+    <p class="byte-line" id="byte-line" aria-live="polite"></p>
+  </main>
+</div>
+
+<script>
+  (function () {
+    var input      = document.getElementById('main-input');
+    var errorEl    = document.getElementById('error-msg');
+    var val1El     = document.getElementById('value-1');
+    var val2El     = document.getElementById('value-2');
+    var byteLine   = document.getElementById('byte-line');
+    var inputLabel = document.getElementById('input-label');
+    var card1Label = document.getElementById('card-label-1');
+    var card2Label = document.getElementById('card-label-2');
+    var modeBtns   = document.querySelectorAll('.mode-btn');
+
+    var MODES = {
+      decToHex: {
+        inputLabel: 'Decimal number',
+        card1Label: 'Hex',
+        card2Label: 'Reversed bytes',
+        inputMode:  'numeric',
+        initial:    '2196032614'
+      },
+      hexToDec: {
+        inputLabel: 'Reversed hex',
+        card1Label: 'Hex',
+        card2Label: 'Decimal',
+        inputMode:  'text',
+        initial:    '66CCE482'
+      }
+    };
+
+    var mode = 'decToHex';
+    var values = { decToHex: MODES.decToHex.initial, hexToDec: MODES.hexToDec.initial };
+
+    function toHexUpper(bigint) {
+      var hex = bigint.toString(16).toUpperCase();
+      if (hex.length % 2 === 1) hex = '0' + hex;
+      return hex;
+    }
+
+    function reverseBytes(hex) {
+      var bytes = hex.match(/.{2}/g) || [];
+      return bytes.slice().reverse().join('');
+    }
+
+    function formatByteLine(leftHex, rightHex) {
+      var l = leftHex.match(/.{2}/g) || [];
+      var r = rightHex.match(/.{2}/g) || [];
+      if (l.length === 0 || r.length === 0) return '';
+      return '[ ' + l.join(' ') + ' ]  →  [ ' + r.join(' ') + ' ]';
+    }
+
+    function setError(msg) {
+      errorEl.textContent = msg || '';
+    }
+
+    function clearResults() {
+      val1El.textContent = '—';
+      val2El.textContent = '—';
+      byteLine.textContent = '';
+    }
+
+    function renderDecToHex(raw) {
+      if (raw === '') { setError(''); clearResults(); return; }
+      if (!/^-?\d+$/.test(raw)) { setError('Not a valid whole number'); clearResults(); return; }
+
+      var value;
+      try { value = BigInt(raw); }
+      catch (e) { setError('Not a valid whole number'); clearResults(); return; }
+
+      if (value < 0n) { setError('Please enter a non-negative number'); clearResults(); return; }
+
+      setError('');
+      var hex = toHexUpper(value);
+      var reversed = reverseBytes(hex);
+      val1El.textContent = hex;
+      val2El.textContent = reversed;
+      byteLine.textContent = formatByteLine(hex, reversed);
+    }
+
+    function renderHexToDec(raw) {
+      var cleaned = raw.replace(/\s+/g, '');
+      if (cleaned === '') { setError(''); clearResults(); return; }
+      if (!/^[0-9a-fA-F]+$/.test(cleaned)) { setError('Not a valid hex string'); clearResults(); return; }
+      if (cleaned.length % 2 === 1) { setError('Hex must have an even number of characters'); clearResults(); return; }
+
+      setError('');
+      var reversedHex = cleaned.toUpperCase();
+      var originalHex = reverseBytes(reversedHex);
+      var decimal = BigInt('0x' + originalHex).toString(10);
+      val1El.textContent = originalHex;
+      val2El.textContent = decimal;
+      byteLine.textContent = formatByteLine(reversedHex, originalHex);
+    }
+
+    function render() {
+      var raw = input.value.trim();
+      if (mode === 'decToHex') renderDecToHex(raw);
+      else renderHexToDec(raw);
+    }
+
+    function applyModeUI() {
+      var m = MODES[mode];
+      inputLabel.textContent = m.inputLabel;
+      card1Label.textContent = m.card1Label;
+      card2Label.textContent = m.card2Label;
+      input.setAttribute('inputmode', m.inputMode);
+      modeBtns.forEach(function (b) {
+        b.setAttribute('aria-selected', b.getAttribute('data-mode') === mode ? 'true' : 'false');
+      });
+    }
+
+    function setMode(newMode) {
+      if (!MODES[newMode] || newMode === mode) return;
+      values[mode] = input.value;
+      mode = newMode;
+      input.value = values[mode];
+      applyModeUI();
+      render();
+    }
+
+    modeBtns.forEach(function (btn) {
+      btn.addEventListener('click', function () { setMode(btn.getAttribute('data-mode')); });
+    });
+
+    input.addEventListener('input', render);
+    applyModeUI();
+    render();
+
+    document.querySelectorAll('.copy-btn').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        var targetId = btn.getAttribute('data-target');
+        var target = document.getElementById(targetId);
+        if (!target) return;
+        var text = target.textContent || '';
+        if (!text || text === '—') return;
+        var original = btn.textContent;
+        var done = function () {
+          btn.textContent = 'Copied';
+          setTimeout(function () { btn.textContent = original; }, 1200);
+        };
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          navigator.clipboard.writeText(text).then(done, function () {});
+        } else {
+          try {
+            var ta = document.createElement('textarea');
+            ta.value = text;
+            ta.setAttribute('readonly', '');
+            ta.style.position = 'absolute';
+            ta.style.left = '-9999px';
+            document.body.appendChild(ta);
+            ta.select();
+            document.execCommand('copy');
+            document.body.removeChild(ta);
+            done();
+          } catch (e) { /* give up silently */ }
+        }
+      });
+    });
+  })();
+
+  (function () {
+    function postHeight() {
+      var h = Math.ceil(document.documentElement.scrollHeight);
+      try {
+        window.parent.postMessage({ type: 'initio-hex-reverser:height', height: h }, '*');
+      } catch (e) { /* no parent, running standalone */ }
+    }
+    window.addEventListener('load', postHeight);
+    window.addEventListener('resize', postHeight);
+    if (typeof ResizeObserver !== 'undefined') {
+      new ResizeObserver(postHeight).observe(document.body);
+    }
+  })();
+</script>
+</body>
+</html>
